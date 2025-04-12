@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.signal import welch
 
-def compute_valid_prediction_time(y_true, y_pred, t_vals, threshold=0.0001, lambda_max=0.9):
+def compute_valid_prediction_time(y_true, y_pred, t_vals, threshold, lambda_max):
     """
     Compute the Valid Prediction Time (VPT) and compare it to Lyapunov time T_lambda = 1 / lambda_max.
     
@@ -112,8 +112,11 @@ def compute_attractor_deviation(predictions, targets, cube_size=(0.1, 0.1, 0.1))
 
 def compute_psd(y, dt=0.01):
     z = y[:, 2]  # Extract Z-component
-
+    x = y[:, 0]  # Extract X-component
+    y1 = y[:, 1]  # Extract Y-component
     # Compute PSD using Welch’s method
-    freqs, psd = welch(z, fs=1/dt, window='hamming', nperseg=len(z))  # Using Hamming window
+    freqs_z, psd_z = welch(z, fs=1/dt, window='hamming', nperseg=1024)  # Using Hamming window
+    freqs_x, psd_x = welch(x, fs=1/dt, window='hamming', nperseg=1024)  # Using Hamming window
+    freqs_y, psd_y = welch(y1, fs=1/dt, window='hamming', nperseg=1024)  # Using Hamming window
 
-    return freqs, psd
+    return freqs_z, psd_z, freqs_x, psd_x, freqs_y, psd_y

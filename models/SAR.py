@@ -15,6 +15,14 @@ def scale_spectral_radius(W, target_radius=0.95):
         return W
     return (W / radius) * target_radius
 
+def augment_state_with_squares(x):
+    """
+    Given state vector x in R^N, return [ x, x^2, 1 ] in R^(2N+1).
+    We'll use this for both training and prediction.
+    """
+    x_sq = x**2
+    return np.concatenate([x, x_sq, [1.0]])  # shape: 2N+1
+
 class SAR3D:
     """
     Self-Attention Reservoir (SAR) for 3D->3D single-step tasks.
@@ -142,7 +150,14 @@ class SAR3D:
         states_use, _ = self.collect_states(train_input, discard=discard)
         target_use = train_target[discard:]
         # augment with bias
-        X_aug = np.hstack([states_use, np.ones((states_use.shape[0],1))])
+        # X_aug = np.hstack([states_use, np.ones((states_use.shape[0],1))])
+
+        # polynomial readout
+        X_list = []
+        for s in states_use:
+            X_list.append(augment_state_with_squares(s))
+        X_aug = np.array(X_list)  # shape => [T-discard, 2N+1]
+
         reg = Ridge(alpha=self.ridge_alpha, fit_intercept=False)
         reg.fit(X_aug, target_use)
         self.W_out = reg.coef_
@@ -153,7 +168,8 @@ class SAR3D:
         current_in = np.array(initial_input)
         for _ in range(n_steps):
             self._update(current_in)
-            x_aug = np.concatenate([self.x, [1.0]])
+            # x_aug = np.concatenate([self.x, [1.0]])
+            x_aug = augment_state_with_squares(self.x)
             out = self.W_out @ x_aug
             preds.append(out)
             current_in = out

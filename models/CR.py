@@ -77,7 +77,14 @@ class CR3D:
     def fit_readout(self, train_input, train_target, discard=100):
         states_use, _ = self.collect_states(train_input, discard=discard)
         targets_use = train_target[discard:]
-        X_aug = np.hstack([states_use, np.ones((states_use.shape[0],1))])
+        # X_aug = np.hstack([states_use, np.ones((states_use.shape[0],1))])
+
+        # polynomial readout
+        X_list = []
+        for s in states_use:
+            X_list.append(augment_state_with_squares(s))
+        X_aug = np.array(X_list)  # shape => [T-discard, 2N+1]
+
         reg = Ridge(alpha=self.ridge_alpha, fit_intercept=False)
         reg.fit(X_aug, targets_use)
         self.W_out = reg.coef_
@@ -87,7 +94,8 @@ class CR3D:
         current_in = np.array(initial_input)
         for _ in range(n_steps):
             self._update(current_in)
-            x_aug = np.concatenate([self.x, [1.0]])
+            # x_aug = np.concatenate([self.x, [1.0]])
+            x_aug = augment_state_with_squares(self.x)
             out = self.W_out @ x_aug
             preds.append(out)
             current_in = out

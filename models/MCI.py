@@ -71,8 +71,9 @@ class MCI3D:
         input_scale=0.2,
         leaking_rate=1.0,
         ridge_alpha=1e-6,
-        combine_factor=0.5,    # 'h' in the paper
-        seed=47
+        combine_factor=0.1,    # 'h' in the paper
+        seed=47,
+        v1=0.6, v2=0.6         # fixed values for v1, v2
     ):
         """
         reservoir_size: N, size of each cycle reservoir 
@@ -92,6 +93,8 @@ class MCI3D:
         self.ridge_alpha    = ridge_alpha
         self.combine_factor = combine_factor
         self.seed           = seed
+        self.v1 = v1
+        self.v2 = v2
 
         # We'll define (and build) adjacency for each cycle, 
         # plus cross-connection for two sub-reservoirs.
@@ -141,7 +144,8 @@ class MCI3D:
         # For clarity we do:
         W_cn[0, N-1] = self.connect_weight
         if N>1:
-            W_cn[1, N-2] = self.connect_weight
+            # W_cn[1, N-2] = self.connect_weight
+            W_cn[N-1, 0] = self.connect_weight
         self.W_cn = W_cn
 
         # We'll define input weights for each sub-reservoir, shape [N, dim_input].
@@ -242,8 +246,17 @@ class MCI3D:
             np.random.seed(self.seed+100)
             # build V1, V2 in shape [N, d_in]
             N = self.reservoir_size
-            V1 = (np.random.rand(N, d_in)-0.5)*2.0*self.input_scale
-            V2 = (np.random.rand(N, d_in)-0.5)*2.0*self.input_scale
+            # V1 = (np.random.rand(N, d_in)-0.5)*2.0*self.input_scale
+            # V2 = (np.random.rand(N, d_in)-0.5)*2.0*self.input_scale
+
+            sign_V1 = np.random.choice([-1, 1], size=(N, d_in))
+            sign_V2 = np.random.choice([-1, 1], size=(N, d_in))
+
+            v1, v2 = self.v1, self.v2  # fixed values for V1, V2
+
+            V1 = v1 * sign_V1 * self.input_scale
+            V2 = v2 * sign_V2 * self.input_scale
+
             # eq(10): Win1= V1 - V2, Win2= V1 + V2
             self.Win1 = V1 - V2
             self.Win2 = V1 + V2

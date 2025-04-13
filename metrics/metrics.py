@@ -1,6 +1,7 @@
-import numpy as np    
+import numpy as np
+from scipy.signal import welch
 
-def compute_valid_prediction_time(y_true, y_pred, t_vals, threshold=0.0001, lambda_max=0.9):
+def compute_valid_prediction_time(y_true, y_pred, t_vals, threshold, lambda_max):
     """
     Compute the Valid Prediction Time (VPT) and compare it to Lyapunov time T_lambda = 1 / lambda_max.
     
@@ -70,3 +71,52 @@ def nrmse_dimwise(pred, truth):
     std = np.std(truth, axis=0)
     std[std == 0] = 1e-8
     return np.sqrt(mse) / std
+
+def compute_attractor_deviation(predictions, targets, cube_size=(0.1, 0.1, 0.1)):
+    """
+    Compute the Attractor Deviation (ADev) metric.
+
+    Parameters:
+        predictions (numpy.ndarray): Predicted trajectories of shape (n, 3).
+        targets (numpy.ndarray): True trajectories of shape (n, 3).
+        cube_size (tuple): Dimensions of the cube (dx, dy, dz).
+
+    Returns:
+        float: The ADev metric.
+    """
+    # Define the cube grid based on the range of the data and cube size
+    min_coords = np.min(np.vstack((predictions, targets)), axis=0)
+    max_coords = np.max(np.vstack((predictions, targets)), axis=0)
+
+    # Create a grid of cubes
+    grid_shape = ((max_coords - min_coords) / cube_size).astype(int) + 1
+
+    # Initialize the cube occupancy arrays
+    pred_cubes = np.zeros(grid_shape, dtype=int)
+    target_cubes = np.zeros(grid_shape, dtype=int)
+
+    # Map trajectories to cubes
+    pred_indices = ((predictions - min_coords) / cube_size).astype(int)
+    target_indices = ((targets - min_coords) / cube_size).astype(int)
+
+    # Mark cubes visited by predictions and targets
+    for idx in pred_indices:
+        pred_cubes[tuple(idx)] = 1
+    for idx in target_indices:
+        target_cubes[tuple(idx)] = 1
+
+    # Compute the ADev metric
+    adev = np.sum(np.abs(pred_cubes - target_cubes))
+
+    return adev
+
+def compute_psd(y, dt=0.01):
+    z = y[:, 2]  # Extract Z-component
+    x = y[:, 0]  # Extract X-component
+    y1 = y[:, 1]  # Extract Y-component
+    # Compute PSD using Welch’s method
+    freqs_z, psd_z = welch(z, fs=1/dt, window='hamming', nperseg=1024)  # Using Hamming window
+    freqs_x, psd_x = welch(x, fs=1/dt, window='hamming', nperseg=1024)  # Using Hamming window
+    freqs_y, psd_y = welch(y1, fs=1/dt, window='hamming', nperseg=1024)  # Using Hamming window
+
+    return freqs_z, psd_z, freqs_x, psd_x, freqs_y, psd_y

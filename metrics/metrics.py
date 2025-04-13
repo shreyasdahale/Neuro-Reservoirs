@@ -53,9 +53,6 @@ def compute_valid_prediction_time(y_true, y_pred, t_vals, threshold, lambda_max)
     T_lambda = 1.0 / lambda_max
     ratio = T_VPT / T_lambda
 
-    # 6) Valid Prediction Time (VPT)
-    # lambda_max_lorenz = 0.9
-    # threshold = 0.01
     print(f"\n--- Valid Prediction Time (VPT) with threshold={threshold}, lambda_max={lambda_max} ---")
     
     return T_VPT, T_lambda, ratio
@@ -123,11 +120,9 @@ def compute_psd(y, dt=0.01):
     return freqs_z, psd_z, freqs_x, psd_x, freqs_y, psd_y
 
 def compute_relative_psd(y_true, y_pred, dt=0.01):
-    # Compute PSDs for true and predicted signals
     _, psd_z_true, _, psd_x_true, _, psd_y_true = compute_psd(y_true, dt)
     _, psd_z_pred, _, psd_x_pred, _, psd_y_pred = compute_psd(y_pred, dt)
 
-    # Calculate PSD distances using L2 norm over the frequency domain
     D_psd_z = np.sqrt(np.sum((psd_z_true - psd_z_pred) ** 2))
     D_psd_x = np.sqrt(np.sum((psd_x_true - psd_x_pred) ** 2))
     D_psd_y = np.sqrt(np.sum((psd_y_true - psd_y_pred) ** 2))

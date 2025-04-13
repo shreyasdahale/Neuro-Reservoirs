@@ -72,7 +72,8 @@ class MCI3D:
         leaking_rate=1.0,
         ridge_alpha=1e-6,
         combine_factor=0.1,    # 'h' in the paper
-        seed=47
+        seed=47,
+        v1=0.6, v2=0.6         # fixed values for v1, v2
     ):
         """
         reservoir_size: N, size of each cycle reservoir 
@@ -92,6 +93,8 @@ class MCI3D:
         self.ridge_alpha    = ridge_alpha
         self.combine_factor = combine_factor
         self.seed           = seed
+        self.v1 = v1
+        self.v2 = v2
 
         # We'll define (and build) adjacency for each cycle, 
         # plus cross-connection for two sub-reservoirs.
@@ -249,7 +252,7 @@ class MCI3D:
             sign_V1 = np.random.choice([-1, 1], size=(N, d_in))
             sign_V2 = np.random.choice([-1, 1], size=(N, d_in))
 
-            v1, v2 = 1, 1
+            v1, v2 = self.v1, self.v2  # fixed values for V1, V2
 
             V1 = v1 * sign_V1 * self.input_scale
             V2 = v2 * sign_V2 * self.input_scale

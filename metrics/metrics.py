@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.signal import welch
+from scipy.integrate import simps
 
 def compute_valid_prediction_time(y_true, y_pred, t_vals, threshold, lambda_max):
     """
@@ -120,3 +121,15 @@ def compute_psd(y, dt=0.01):
     freqs_y, psd_y = welch(y1, fs=1/dt, window='hamming', nperseg=1024)  # Using Hamming window
 
     return freqs_z, psd_z, freqs_x, psd_x, freqs_y, psd_y
+
+def compute_relative_psd(y_true, y_pred, dt=0.01):
+    # Compute PSDs for true and predicted signals
+    _, psd_z_true, _, psd_x_true, _, psd_y_true = compute_psd(y_true, dt)
+    _, psd_z_pred, _, psd_x_pred, _, psd_y_pred = compute_psd(y_pred, dt)
+
+    # Calculate PSD distances using L2 norm over the frequency domain
+    D_psd_z = np.sqrt(np.sum((psd_z_true - psd_z_pred) ** 2))
+    D_psd_x = np.sqrt(np.sum((psd_x_true - psd_x_pred) ** 2))
+    D_psd_y = np.sqrt(np.sum((psd_y_true - psd_y_pred) ** 2))
+
+    return D_psd_z, D_psd_x, D_psd_y

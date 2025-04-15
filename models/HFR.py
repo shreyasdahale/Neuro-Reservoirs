@@ -43,7 +43,7 @@ class HFRRes3D:
     self-similarity, thus capturing multi-scale structures in a single reservoir.
     """
 
-    def _init_(self,
+    def __init__(self,
                  n_levels=3,             # number of hierarchical levels
                  cells_per_level=None,   # list of number of cells at each level, e.g. [8, 32, 128]
                  spectral_radius=0.95,

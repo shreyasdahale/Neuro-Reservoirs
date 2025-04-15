@@ -2,7 +2,7 @@ import numpy as np
 from scipy.signal import welch
 from scipy.integrate import simps
 
-def compute_valid_prediction_time(y_true, y_pred, t_vals, threshold, lambda_max):
+def compute_valid_prediction_time(y_true, y_pred, t_vals, threshold, lambda_max, dt):
     """
     Compute the Valid Prediction Time (VPT) and compare it to Lyapunov time T_lambda = 1 / lambda_max.
     
@@ -54,6 +54,8 @@ def compute_valid_prediction_time(y_true, y_pred, t_vals, threshold, lambda_max)
     ratio = T_VPT / T_lambda
 
     print(f"\n--- Valid Prediction Time (VPT) with threshold={threshold}, lambda_max={lambda_max} ---")
+
+    T_VPT = (T_VPT-t_vals[0])/dt  # Adjust T_VPT to be relative to the start time
     
     return T_VPT, T_lambda, ratio
 

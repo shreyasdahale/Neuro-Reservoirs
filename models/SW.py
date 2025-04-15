@@ -75,50 +75,50 @@ class SW3D:
         W = scale_spectral_radius(W, self.spectral_radius)
         self.W = W
 
-    def reset_state(self):
-        self.x = np.zeros(self.reservoir_size)
+    # def reset_state(self):
+    #     self.x = np.zeros(self.reservoir_size)
 
-    def _update(self, u):
-        pre_activation = self.W @ self.x + self.W_in @ u
-        x_new = np.tanh(pre_activation)
-        alpha = self.leaking_rate
-        self.x = (1.0 - alpha)*self.x + alpha*x_new
+    # def _update(self, u):
+    #     pre_activation = self.W @ self.x + self.W_in @ u
+    #     x_new = np.tanh(pre_activation)
+    #     alpha = self.leaking_rate
+    #     self.x = (1.0 - alpha)*self.x + alpha*x_new
 
-    def collect_states(self, inputs, discard=100):
-        self.reset_state()
-        states = []
-        for val in inputs:
-            self._update(val)
-            states.append(self.x.copy())
-        states = np.array(states)
-        return states[discard:], states[:discard]
+    # def collect_states(self, inputs, discard=100):
+    #     self.reset_state()
+    #     states = []
+    #     for val in inputs:
+    #         self._update(val)
+    #         states.append(self.x.copy())
+    #     states = np.array(states)
+    #     return states[discard:], states[:discard]
 
-    def fit_readout(self, train_input, train_target, discard=100):
-        states_use, _ = self.collect_states(train_input, discard=discard)
-        targets_use = train_target[discard:]
-        # X_aug = np.hstack([states_use, np.ones((states_use.shape[0],1))])
+    # def fit_readout(self, train_input, train_target, discard=100):
+    #     states_use, _ = self.collect_states(train_input, discard=discard)
+    #     targets_use = train_target[discard:]
+    #     # X_aug = np.hstack([states_use, np.ones((states_use.shape[0],1))])
 
-        # polynomial readout
-        X_list = []
-        for s in states_use:
-            X_list.append(augment_state_with_squares(s))
-        X_aug = np.array(X_list)  # shape => [T-discard, 2N+1]
+    #     # polynomial readout
+    #     X_list = []
+    #     for s in states_use:
+    #         X_list.append(augment_state_with_squares(s))
+    #     X_aug = np.array(X_list)  # shape => [T-discard, 2N+1]
 
-        reg = Ridge(alpha=self.ridge_alpha, fit_intercept=False)
-        reg.fit(X_aug, targets_use)
-        self.W_out = reg.coef_
+    #     reg = Ridge(alpha=self.ridge_alpha, fit_intercept=False)
+    #     reg.fit(X_aug, targets_use)
+    #     self.W_out = reg.coef_
 
-    def predict_autoregressive(self, initial_input, n_steps):
-        preds = []
-        current_in = np.array(initial_input)
-        for _ in range(n_steps):
-            self._update(current_in)
-            # x_aug = np.concatenate([self.x, [1.0]])
-            x_aug = augment_state_with_squares(self.x)
-            out = self.W_out @ x_aug
-            preds.append(out)
-            current_in = out
-        return np.array(preds)
+    # def predict_autoregressive(self, initial_input, n_steps):
+    #     preds = []
+    #     current_in = np.array(initial_input)
+    #     for _ in range(n_steps):
+    #         self._update(current_in)
+    #         # x_aug = np.concatenate([self.x, [1.0]])
+    #         x_aug = augment_state_with_squares(self.x)
+    #         out = self.W_out @ x_aug
+    #         preds.append(out)
+    #         current_in = out
+    #     return np.array(preds)
     
 # --- Revised segregated IO reservoir class ---
 class SW3DSegregated:

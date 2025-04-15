@@ -113,9 +113,9 @@ def compute_psd(y, dt=0.01):
     x = y[:, 0]  # Extract X-component
     y1 = y[:, 1]  # Extract Y-component
     # Compute PSD using Welch’s method
-    freqs_z, psd_z = welch(z, fs=1/dt, window='hamming', nperseg=1024)  # Using Hamming window
-    freqs_x, psd_x = welch(x, fs=1/dt, window='hamming', nperseg=1024)  # Using Hamming window
-    freqs_y, psd_y = welch(y1, fs=1/dt, window='hamming', nperseg=1024)  # Using Hamming window
+    freqs_z, psd_z = welch(z, fs=1/dt, window='hamming', nperseg=len(y)//4)  # Using Hamming window
+    freqs_x, psd_x = welch(x, fs=1/dt, window='hamming', nperseg=len(y)//4)  # Using Hamming window
+    freqs_y, psd_y = welch(y1, fs=1/dt, window='hamming', nperseg=len(y)//4)  # Using Hamming window
 
     return freqs_z, psd_z, freqs_x, psd_x, freqs_y, psd_y
 

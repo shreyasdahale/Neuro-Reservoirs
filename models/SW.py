@@ -309,6 +309,16 @@ class SW3DSegregated:
             preds.append(out)
             current_in = out
         return np.array(preds)
+    
+    def predict_open(self, test_input):
+        preds = []
+        for u in test_input:
+            self._update(u)
+            x_out = self.x[self.output_indices]
+            x_aug = augment_state_with_squares(x_out)
+            out = self.W_out @ x_aug
+            preds.append(out)
+        return np.array(preds)
 
 
 # --- Random IO Reservoir Class ---
@@ -459,4 +469,14 @@ class SW3DRandom:
             out = self.W_out @ x_aug
             preds.append(out)
             current_in = out
+        return np.array(preds)
+    
+    def predict_open(self, test_input):
+        preds = []
+        for u in test_input:
+            self._update(u)
+            x_out = self.x[self.output_indices]
+            x_aug = augment_state_with_squares(x_out)
+            out = self.W_out @ x_aug
+            preds.append(out)
         return np.array(preds)

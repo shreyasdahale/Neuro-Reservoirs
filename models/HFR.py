@@ -260,3 +260,12 @@ class HFRRes3D:
             preds.append(out)
             current_in= out
         return np.array(preds)
+    
+    def predict_open_loop(self, test_input):
+        preds = []
+        for true_input in test_input:
+            self._update(true_input)
+            x_aug = augment_state_with_squares(self.x)
+            out = self.W_out @ x_aug
+            preds.append(out)
+        return np.array(preds)

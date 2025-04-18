@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.signal import welch
-from scipy.integrate import simps
+from sklearn.neighbors import NearestNeighbors
+from scipy.stats import linregress
 
 def compute_valid_prediction_time(y_true, y_pred, t_vals, threshold, lambda_max, dt):
     """
@@ -201,3 +202,96 @@ def compute_relative_psd(y_true, y_pred, dt=0.01):
     PSD = D_psd_z + D_psd_x + D_psd_y
 
     return PSD
+
+def compute_max_lyapunov(
+    data: np.ndarray,
+    emb_dim: int = 10,
+    delay: int = 1,
+    min_tsep: int = 10,
+    fit_range: tuple = (0, None)
+) -> float:
+    """
+    Estimate the maximal Lyapunov exponent using Rosenstein et al.'s algorithm.
+    
+    Parameters
+    ----------
+    data : ndarray, shape (N,) or (N, d)
+        Scalar or multivariate time series.
+    emb_dim : int
+        Embedding dimension.
+    delay : int
+        Time delay for embedding.
+    min_tsep : int
+        The Theiler window to exclude temporally correlated neighbors.
+    fit_range : (int, int or None)
+        Time indices (start, end) over which to fit the divergence curve.
+    
+    Returns
+    -------
+    lambda_max : float
+        Estimated maximal Lyapunov exponent (per time step).
+    """
+    # 1. Build delay embedding
+    N = len(data)
+    M = N - (emb_dim - 1) * delay
+    embedded = np.empty((M, emb_dim))
+    for i in range(emb_dim):
+        embedded[:, i] = data[i * delay : i * delay + M]
+    
+    # 2. Find nearest neighbors with temporal exclusion
+    nbrs = NearestNeighbors(n_neighbors=2).fit(embedded)
+    distances, indices = nbrs.kneighbors(embedded)
+    # discard self-match (distance zero) -> take second nearest
+    neigh_idx = indices[:, 1]
+    # enforce Theiler window
+    valid = np.abs(neigh_idx - np.arange(M)) > min_tsep
+    neigh_idx = np.where(valid, neigh_idx, np.arange(M))
+    
+    # 3. Track divergence over time
+    max_t = M - max(neigh_idx)
+    div = np.zeros(max_t)
+    counts = np.zeros(max_t)
+    for i in range(M):
+        j = neigh_idx[i]
+        max_len = min(M - i, M - j)
+        for k in range(max_len):
+            div[k] += np.log(np.linalg.norm(embedded[i + k] - embedded[j + k]))
+            counts[k] += 1
+    # average log divergence
+    avg_log_div = div[counts > 0] / counts[counts > 0]
+    
+    # 4. Linear fit over specified range
+    t = np.arange(len(avg_log_div))
+    start, end = fit_range
+    end = end or len(t)
+    slope, _, _, _, _ = linregress(t[start:end], avg_log_div[start:end])
+    return slope
+
+
+def lyapunov_deviation(
+    true_traj: np.ndarray,
+    pred_traj: np.ndarray,
+    **lyap_kwargs
+) -> float:
+    """
+    Compute the absolute difference between the maximal Lyapunov exponents
+    of the true and predicted trajectories.
+    
+    Parameters
+    ----------
+    true_traj : ndarray
+        Ground‑truth time series.
+    pred_traj : ndarray
+        Model‑generated time series.
+    **lyap_kwargs :
+        Keyword arguments passed to compute_max_lyapunov.
+    
+    Returns
+    -------
+    delta_lambda : float
+        |lambda_max(true_traj) - lambda_max(pred_traj)|.
+    """
+    lambda_true = compute_max_lyapunov(true_traj, **lyap_kwargs)
+    lambda_pred = compute_max_lyapunov(pred_traj, **lyap_kwargs)
+    return abs(lambda_true - lambda_pred)
+

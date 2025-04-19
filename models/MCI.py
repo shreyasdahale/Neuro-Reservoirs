@@ -313,7 +313,8 @@ class MCI3D:
         preds = []
         for true_input in test_input:
             self._update(true_input)
-            x_aug = augment_state_with_squares(self.x)
+            combined = self._combine_state()
+            x_aug = augment_state_with_squares(combined)
             out = self.W_out @ x_aug
             preds.append(out)
         return np.array(preds)

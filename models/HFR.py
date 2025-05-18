@@ -159,15 +159,15 @@ class HFRRes3D:
             labels_lp1 = partitions[level+1]
             # we define adjacency from i in [0..k_l-1] to j in [0..k_lp1-1] if the same sample t belongs to i at level l and j at l+1
             # Count how many times
-            Xvert = np.zeros((k_l, k_lp1))
+            Xvert1 = np.zeros((k_l, k_lp1))
             for t in range(N):
                 i = labels_l[t]
                 j = labels_lp1[t]
-                Xvert[i,j]+=1
+                Xvert1[i,j]+=1
             # row normalize
-            row_sum = Xvert.sum(axis=1, keepdims=True)
+            row_sum = Xvert1.sum(axis=1, keepdims=True)
             row_sum[row_sum==0.0] = 1.0
-            Xvert /= row_sum
+            Xvert = Xvert1/row_sum
             # place in big A
             off_l   = offsets[level]
             off_lp1 = offsets[level+1]
@@ -175,7 +175,7 @@ class HFRRes3D:
             # tentative idea, we could also define adjacency from l+1 -> l (parent link), if desired
             # we do the same for the 'child -> parent' link or skip it if we only want forward adjacency
             # For now, let's do symmetrical
-            Yvert = Xvert.T
+            Yvert = Xvert1.T
             col_sum = Yvert.sum(axis=1, keepdims=True)
             col_sum[col_sum==0.0] = 1.0
             Yvert /= col_sum

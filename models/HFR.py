@@ -80,6 +80,7 @@ class HFRRes3D:
         self.W_in  = None
         self.W_out = None
         self.x     = None
+        self.n_levels = len(self.cells_per_level)
 
         # We'll define a total number of nodes = sum(cells_per_level)
         self.n_nodes = sum(self.cells_per_level)

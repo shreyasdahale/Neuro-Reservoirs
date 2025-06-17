@@ -308,3 +308,13 @@ class MCI3D:
             current_in = out  # feed output back as next input
 
         return np.array(preds)
+        
+    def predict_open_loop(self, test_input):
+        preds = []
+        for true_input in test_input:
+            self._update(true_input)
+            combined = self._combine_state()
+            x_aug = augment_state_with_squares(combined)
+            out = self.W_out @ x_aug
+            preds.append(out)
+        return np.array(preds)

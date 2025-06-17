@@ -101,7 +101,7 @@ class HFRRes3D:
         for level in range(self.n_levels):
             k = self.cells_per_level[level]
             # cluster
-            kmeans = KMeans(n_clusters=k, random_state=self.seed+10*level)
+            kmeans = KMeans(n_clusters=k, random_state=self.seed+10*level, n_init='auto')
             kmeans.fit(data_3d)
             labels = kmeans.predict(data_3d)
             partitions.append(labels)

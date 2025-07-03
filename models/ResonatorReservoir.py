@@ -31,11 +31,19 @@ def _sample_frequencies(m: int, mode: str = "log") -> np.ndarray:
         return (np.mod(np.arange(1, m + 1) * 0.61803398875, 1.0) * (np.pi - 0.02) + 0.01)
     raise ValueError("mode must be {'log','lin','gold'}")
 
+def augment_state_with_squares(x):
+    """
+    Given state vector x in R^N, return [ x, x^2, 1 ] in R^(2N+1).
+    We'll use this for both training and prediction.
+    """
+    x_sq = x**2
+    return np.concatenate([x, x_sq, [1.0]])  # shape: 2N+1
+
 
 # ---------------------------------------------------------------------
 # Resonator reservoir class
 # ---------------------------------------------------------------------
-class ResonatorReservoirESN:
+class FSR3D:
     """
     Frequency-Selective Resonator Echo-State Network.
 
@@ -59,7 +67,7 @@ class ResonatorReservoirESN:
         use_gain: bool = True,
         gain_beta: float = 2.0,
         gain_sigmoid: bool = True,
-        use_quadrature_feat: bool = True,
+        use_quadratic_feat: bool = True,
         seed: int = 42,
     ):
         if reservoir_size % 2:
@@ -74,7 +82,7 @@ class ResonatorReservoirESN:
         self.use_gain = use_gain
         self.beta = gain_beta
         self.sig_gain = gain_sigmoid
-        self.use_quad = use_quadrature_feat
+        self.use_quad = use_quadratic_feat
         self.seed = seed
         self.freq_mode = frequency_mode
 
@@ -140,6 +148,11 @@ class ResonatorReservoirESN:
         pre = self.W_res @ self.x + self.W_in @ u_t
         if self.use_gain:
             pre *= self.g
+            # pre = self.g*self.W_res @ self.x + self.W_in @ u_t
+        
+        else:
+            pre = self.W_res @ self.x + self.W_in @ u_t
+
         new_x = np.tanh(pre)
         self.x = (1.0 - self.alpha) * self.x + self.alpha * new_x
 
@@ -178,13 +191,11 @@ class ResonatorReservoirESN:
 
         # feature map
         if self.use_quad:
-            # quadrature permutation P(x,y)=(y,−x)
-            P = X.reshape((-1, self.m, 2))[:, :, ::-1]
-            P[:, :, 1] *= -1           # negate second component
-            P = P.reshape(X.shape)     # back to [T−d, N]
-            feats = np.concatenate(
-                [X, X * X, X * P, np.ones((X.shape[0], 1), dtype=np.float32)], axis=1
-            )
+            X_list = []
+            for s in X:
+                X_list.append(augment_state_with_squares(s))
+            feats = np.array(X_list, dtype=np.float32)
+
         else:
             feats = X
 
@@ -209,10 +220,7 @@ class ResonatorReservoirESN:
             self._update(u_t)
 
             if self.use_quad:
-                P = self.x.reshape((self.m, 2))[..., ::-1]
-                P[:, 1] *= -1
-                P = P.reshape(self.N)
-                feat_vec = np.concatenate([self.x, self.x * self.x, self.x * P, [1.0]])
+                feat_vec = augment_state_with_squares(self.x)
             else:
                 feat_vec = self.x
 
@@ -220,4 +228,16 @@ class ResonatorReservoirESN:
             preds[t] = y_t
             u_t = y_t[:d_in]
 
+        return preds
+    
+    def predict_open_loop(self, inputs: np.ndarray):
+        preds = []
+        for true_input in inputs:
+            self._update(true_input)
+            if self.use_quad:
+                feat_vec = augment_state_with_squares(self.x)
+            else:
+                feat_vec = self.x
+            out = (self.W_out @ feat_vec).astype(np.float32)
+            preds.append(out)
         return preds

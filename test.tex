@@ -1,0 +1,39 @@
+\begin{table*}[!ht]
+\centering
+\caption{Open‑loop forecasting on real‑world datasets.  
+For the ECG stream we report sample‑level NRMSE; for the sunspot series the error is normalised by the empirical standard deviation of the training set.  
+Values are averaged over thirty different seeds; “$\pm$” denotes one sample standard deviation.}
+\label{tab:nrmse_real}
+\renewcommand{\arraystretch}{1.15}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{l c cccccc}
+\toprule
+\multirow{2}{*}{\textbf{Dataset}} & \multirow{2}{*}{\textbf{Horizon $h$}} &
+\multicolumn{6}{c}{\textbf{NRMSE  $\downarrow$}}\\
+\cmidrule(lr){3-8}
+&&ESN & SCR & CRJ & MCI‑ESN & DeepESN & \textbf{HFR}\\
+
+\midrule
+\multirow{3}{*}{MIT–BIH ECG} 
+&300  & 2.351300 $\pm$ 0.547700 & 2.030100 $\pm$ 0.521600 & 1.568200 $\pm$ 0.336800 & \underline{1.143200 $\pm$ 0.060200} & 2.737100 $\pm$ 0.962800 & \textbf{0.635200 $\pm$ 0.078400} \\
+&600  & 1.755700 $\pm$ 0.369600 & 1.542500 $\pm$ 0.346400 & 1.257500 $\pm$ 0.212700 & \underline{1.054600 $\pm$ 0.032800} & 2.016700 $\pm$ 0.658000 & \textbf{0.656300 $\pm$ 0.041300} \\
+&1000 & 1.485200 $\pm$ 0.225400 & 1.371500 $\pm$ 0.200000 & 1.210300 $\pm$ 0.113200 & \underline{1.126200 $\pm$ 0.015600} & 1.651300 $\pm$ 0.412700 & \textbf{0.830200 $\pm$ 0.019200} \\
+
+\midrule
+
+\multirow{3}{*}{Sunspot (monthly)}
+&300  & 0.600148 $\pm$ 0.021420 & 1.109189 $\pm$ 0.132370 & 1.216758 $\pm$ 0.185853 & \underline{0.467511 $\pm$ 0.009054} & 0.585013 $\pm$ 0.024734 & \textbf{0.417315 $\pm$ 0.000065} \\
+&600  & 0.549574 $\pm$ 0.029541 & 1.011586 $\pm$ 0.130426 & 1.128911 $\pm$ 0.156681 & \underline{0.423414 $\pm$ 0.014026} & 0.501500 $\pm$ 0.023156 & \textbf{0.338439 $\pm$ 0.000129} \\
+&1000 & 0.522872 $\pm$ 0.026253 & 0.960539 $\pm$ 0.121743 & 1.077041 $\pm$ 0.119212 & \underline{0.405954 $\pm$ 0.010016} & 0.480164 $\pm$ 0.019550 & \textbf{0.336286 $\pm$ 0.000101} \\
+
+\midrule
+
+\multirow{3}{*}{Santa Fe (Dataset B)}
+&300  & 0.275769 $\pm$ 0.001402 & 0.292438 $\pm$ 0.003206 & 0.285799 $\pm$ 0.004680 & \underline{0.269354 $\pm$ 0.003108} & 0.287344 $\pm$ 0.003815 & \textbf{0.268506 $\pm$ 0.000106} \\
+&600  & \underline{0.236361 $\pm$ 0.001367} & 0.252126 $\pm$ 0.005263 & 0.241253 $\pm$ 0.003707 & 0.260881 $\pm$ 0.021702 & 0.243517 $\pm$ 0.004895 & \textbf{0.232830 $\pm$ 0.000071} \\
+&1000 & \underline{0.250854 $\pm$ 0.001015} & 0.263934 $\pm$ 0.004252 & 0.256150 $\pm$ 0.003056 & 0.267726 $\pm$ 0.017532 & 0.257572 $\pm$ 0.003875 & \textbf{0.250443 $\pm$ 0.000080} \\
+
+
+\bottomrule
+\end{tabular}}
+\end{table*}
